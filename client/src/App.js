@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { setContext } from "@apollo/client/link/context";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -23,8 +24,20 @@ const httpLink = createHttpLink({
   uri: "/graphql", // links to GraphQL server
 });
 
+const authLink = setContext((_, { headers }) => {
+  const token = localStorage.getItem("id_token");
+  // set the http headers of every request to include the token!!
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : "",
+    },
+  };
+});
+
 const client = new ApolloClient({
-  link: httpLink, // links to API endpoint
+  // tie the auth and http links together!!
+  link: authLink.concat(httpLink),
   cache: new InMemoryCache(),
 });
 
